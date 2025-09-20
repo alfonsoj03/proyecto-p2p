@@ -1,0 +1,12 @@
+---
+peer_id: "peer_02"
+ip: "127.0.0.1"
+rest_port: 50002
+grpc_port: 51002
+files_directory: "./files/peer2"
+headline_peer:
+  id: "peer_01"
+  address: "127.0.0.1:50001"
+substitute_peer:
+  id: ""
+  address: ""

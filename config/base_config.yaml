@@ -1,0 +1,12 @@
+---
+peer_id: ""
+ip: "127.0.0.1"
+rest_port: null
+grpc_port: null
+files_directory: ""
+headline_peer:
+  id: ""
+  address: ""
+substitute_peer:
+  id: ""
+  address: ""

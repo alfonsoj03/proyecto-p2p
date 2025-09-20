@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Generated files
+proto/*_pb2.py
+proto/*_pb2_grpc.py
+
+# Files directory content (except examples)
+files/*/
+!files/peer*/examples/
+
+# Config files with sensitive data
+config/*_production.yaml
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Subida al repositorio nuevo
+/cli.py
+/docker-compose.yml
+/Dockerfile
+/files.zip
+/GUIA_EJECUCION.md
+/INFORME_TECNICO.md
+/README.md
+/main.py
+/run_tests.py
+/shared/
+/services/file/__pycache__
+/services/file/__init__.py
+/services/file/
+/services/directory/
+/services/transfer/*
+/client/
+/.desarrolloPtoP
+/scripts/setup.py
+/scripts/start_peers.bat
+/scripts/start_peers.sh
