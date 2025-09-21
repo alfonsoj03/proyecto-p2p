@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package transfer;
+
+// Servicio de transferencia de archivos P2P
+service TransferService {
+    // Descarga un archivo del nodo remoto
+    rpc Download(FileRequest) returns (stream FileChunk);
+    
+    // Sube un archivo al nodo remoto (para completar transferencia)
+    rpc Upload(stream FileChunk) returns (TransferResponse);
+    
+    // Verifica si un archivo existe en el nodo remoto
+    rpc CheckFile(FileRequest) returns (FileInfo);
+}
+
+// Solicitud para descargar/verificar un archivo
+message FileRequest {
+    string filename = 1;           // Nombre del archivo
+    string requesting_node = 2;    // Dirección del nodo que solicita
+    string file_path = 3;          // Ruta específica del archivo (opcional)
+}
+
+// Chunk de datos del archivo para streaming
+message FileChunk {
+    string filename = 1;           // Nombre del archivo
+    bytes data = 2;                // Datos del chunk
+    int32 chunk_number = 3;        // Número de chunk (para ordenamiento)
+    int64 total_size = 4;          // Tamaño total del archivo
+    bool is_last_chunk = 5;        // Indica si es el último chunk
+    string requesting_node = 6;    // Nodo que solicita (para upload)
+}
+
+// Respuesta de operaciones de transferencia
+message TransferResponse {
+    bool success = 1;              // Éxito de la operación
+    string message = 2;            // Mensaje descriptivo
+    int64 bytes_transferred = 3;   // Bytes transferidos
+    string file_path = 4;          // Ruta donde se guardó el archivo
+}
+
+// Información de un archivo
+message FileInfo {
+    bool exists = 1;               // Si el archivo existe
+    string filename = 2;           // Nombre del archivo
+    int64 size = 3;                // Tamaño en bytes
+    string file_path = 4;          // Ruta completa del archivo
+    string node_address = 5;       // Dirección del nodo que tiene el archivo
+}
