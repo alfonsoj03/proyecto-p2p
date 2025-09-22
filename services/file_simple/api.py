@@ -1,12 +1,9 @@
-"""
-API REST mínima para indexar() y listar_archivos() en memoria por nodo.
-"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-
 from services.file_simple.service import indexar, listar_archivos
 from services.directory_simple.api import router as directory_router
+from services.transfer_runtime.api import router as transfer_router
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir router de directory_simple
+# Routers
 app.include_router(directory_router)
+app.include_router(transfer_router)
 
 @app.post("/indexar")
 async def api_indexar():

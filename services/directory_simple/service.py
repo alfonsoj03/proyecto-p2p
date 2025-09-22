@@ -64,6 +64,10 @@ def get_random_addresses(limit: int = 2) -> List[str]:
 def get_all() -> List[str]:
     return list(_DL)
 
+def get_self_address() -> Optional[str]:
+    """Devuelve la dirección REST propia (ip:port) si está definida."""
+    return _SELF_ADDR
+
 def _has_file(filename: str) -> bool:
     try:
         for entry in listar_archivos():
@@ -88,8 +92,8 @@ def start_search(filename: str, ttl: int = 3) -> Dict:
     if _has_file(filename):
         return {"found": True, "owner_id": _SELF_ID or "", "address": _SELF_ADDR or ""}
 
-    # Propagar a vecinos
-    for addr in list(_DL):
+    # Propagar a vecinos (excluyendo la propia dirección para evitar llamadas a sí mismo)
+    for addr in [a for a in list(_DL) if a != _SELF_ADDR]:
         try:
             url = f"http://{addr}/directory/query"
             st, txt = _post_json(url, {"query_id": qid, "filename": filename, "ttl": ttl - 1, "origin": _SELF_ADDR})
@@ -100,6 +104,33 @@ def start_search(filename: str, ttl: int = 3) -> Dict:
         except Exception:
             continue
     return {"found": False}
+
+def join_with(target_addr: str) -> Dict:
+    """
+    Hace que ESTE nodo se una a la red a través de target_addr (ip:port).
+    1) Realiza /directory/login contra el target enviando nuestra _SELF_ADDR
+    2) Recibe la DL del target y la adopta localmente (sembrando _DL)
+    Retorna { success: bool, dl?: List[str], error?: str }
+    """
+    if not target_addr:
+        return {"success": False, "error": "target requerido"}
+    if not _SELF_ADDR:
+        return {"success": False, "error": "self address no configurado"}
+    try:
+        st, txt = _post_json(f"http://{target_addr}/directory/login", {"address": _SELF_ADDR})
+        if st != 200:
+            return {"success": False, "error": f"login fallo con status {st}"}
+        resp = json.loads(txt)
+        dl = resp.get("dl") if isinstance(resp, dict) else None
+        if isinstance(dl, list):
+            for addr in dl:
+                if addr:
+                    _ensure_in_dl(addr)
+        # Asegurar nuestra propia dirección
+        _ensure_in_dl(_SELF_ADDR)
+        return {"success": True, "dl": get_all()}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 def handle_query(query_id: str, filename: str, ttl: int, origin: Optional[str]) -> Dict:
     """Maneja una consulta recibida. Deduplica por query_id, verifica local, propaga si ttl>0."""
@@ -113,7 +144,8 @@ def handle_query(query_id: str, filename: str, ttl: int, origin: Optional[str]) 
 
     # Propagar si TTL > 0
     if ttl and ttl > 0:
-        for addr in list(_DL):
+        # Propagar a vecinos (excluyendo la propia dirección y evitando enviar de vuelta directo al origin)
+        for addr in [a for a in list(_DL) if a != _SELF_ADDR]:
             # Evitar enviar de vuelta directo al origin si está en la DL (opcional)
             if origin and addr == origin:
                 continue

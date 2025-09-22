@@ -80,6 +80,14 @@ def main():
         if not (ok1 and ok2):
             print("Advertencia: algún nodo no respondió a tiempo.")
 
+        # Sembrar DL entre Nodo 1 y Nodo 2 mutuamente para el bootstrap manual
+        try:
+            http_post(f"http://127.0.0.1:{port1}/directory/login", {"address": f"127.0.0.1:{port2}"}, timeout=6)
+            http_post(f"http://127.0.0.1:{port2}/directory/login", {"address": f"127.0.0.1:{port1}"}, timeout=6)
+            print("Bootstrap: Nodo1 y Nodo2 agregados mutuamente a sus DLs.")
+        except Exception as e:
+            print("No se pudo sembrar DL entre Nodo1 y Nodo2:", e)
+
         # Create new peer config (peer_03.yaml esperado)
         print("Creando nuevo peer con create_peer.py...")
         cp = subprocess.run([sys.executable, CREATE_PEER, "--config-dir", CONFIG_DIR, "--base-config", os.path.join(CONFIG_DIR, "base_config.yaml")], capture_output=True, text=True)
@@ -127,12 +135,27 @@ def main():
                 return False, str(e)
 
         print("Intentando login con titular...")
-        ok, _ = do_login(headline)
+        ok, login_txt = do_login(headline)
         if not ok:
             print("Titular no respondió. Intentando con suplente...")
-            ok, _ = do_login(substitute)
+            ok, login_txt = do_login(substitute)
             if not ok:
                 print("Suplente tampoco respondió. Puedes reintentar más tarde.")
+
+        # Si el login devolvió una DL, sembrar DL local del nuevo nodo con esas direcciones
+        try:
+            resp = json.loads(login_txt or "{}")
+            dl = resp.get("dl") if isinstance(resp, dict) else None
+            if isinstance(dl, list):
+                for addr in dl:
+                    if addr and f":{new_port}" not in addr:
+                        try:
+                            http_post(f"http://127.0.0.1:{new_port}/directory/login", {"address": addr}, timeout=6)
+                            print(f"Nuevo nodo agregó a su DL: {addr}")
+                        except Exception as e:
+                            print("No se pudo agregar a DL local del nuevo nodo:", addr, e)
+        except Exception:
+            pass
 
         print("Bootstrap y login completados. Ctrl+C para detener.")
         # Keep running
@@ -158,7 +181,6 @@ def main():
                 p_new.kill()
             except Exception:
                 pass
-
 
 if __name__ == "__main__":
     main()

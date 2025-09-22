@@ -3,10 +3,9 @@ from typing import Dict
 
 from services.directory_simple.service import (
     login_from,
-    get_random_addresses,
-    get_all,
     start_search,
     handle_query,
+    join_with,
 )
 
 router = APIRouter(prefix="/directory", tags=["directory_simple"])
@@ -64,3 +63,18 @@ async def relay_query(payload: Dict[str, object]):
         return {"success": False, "error": "query_id y filename requeridos"}
     result = handle_query(qid, filename, ttl, origin if isinstance(origin, str) else None)
     return {"success": True, **result}
+
+@router.post("/join")
+async def join(payload: Dict[str, str]):
+    """
+    Hace que ESTE nodo se una a la red a través de un "target" (ip:port):
+    1) Realiza un login remoto contra target (enviando nuestra dirección propia ya configurada)
+    2) Recibe la DL que devuelve el target
+    3) Siembra la DL local de este nodo con esa DL
+    Body: { "target": "ip:port" }
+    """
+    target = payload.get("target", "") if isinstance(payload, dict) else ""
+    if not target:
+        return {"success": False, "error": "target requerido"}
+    resp = join_with(target)
+    return resp

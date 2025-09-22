@@ -5,12 +5,14 @@ from typing import List, Dict, Optional
 _INDEX: List[Dict] = []
 _BASE_DIR: Optional[str] = None
 
-
 def set_base_directory(path: str) -> None:
     """Configura el directorio base desde el cual se indexarán archivos."""
     global _BASE_DIR
     _BASE_DIR = path
 
+def get_base_directory() -> Optional[str]:
+    """Devuelve el directorio base configurado para este nodo."""
+    return _BASE_DIR
 
 def listar_archivos() -> List[Dict]:
     """Devuelve el índice simple en memoria."""
@@ -31,7 +33,6 @@ def _scan_directory(base_dir: str) -> List[Dict]:
                 "size": size,
             })
     return entries
-
 
 def indexar() -> int:
     """Re-indexa el directorio configurado y guarda en memoria.
