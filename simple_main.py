@@ -5,7 +5,7 @@ import yaml
 # Importa la app FastAPI mínima y el setter del directorio base
 from services.file_simple.api import app
 from services.file_simple.service import set_base_directory
-from services.directory_simple.service import set_self_address
+from services.directory_simple.service import set_self_address, set_self_info
 
 def main():
     parser = argparse.ArgumentParser(description="Inicia una API simple de File Service por nodo")
@@ -27,9 +27,13 @@ def main():
     port = args.port or cfg.get("rest_port")
     if not port:
         raise SystemExit("Puerto no especificado: pase --port o defina rest_port en el YAML")
-    # Registrar dirección propia del nodo en el Directory List simple
+    # Registrar identidad y dirección propia del nodo en el Directory List simple
     self_ip = cfg.get("ip", "127.0.0.1")
-    set_self_address(f"{self_ip}:{int(port)}")
+    peer_id = cfg.get("peer_id", "")
+    if peer_id:
+        set_self_info(peer_id, f"{self_ip}:{int(port)}")
+    else:
+        set_self_address(f"{self_ip}:{int(port)}")
     uvicorn.run(app, host=args.ip, port=int(port), log_level="info")
 
 if __name__ == "__main__":
