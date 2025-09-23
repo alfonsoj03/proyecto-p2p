@@ -1,12 +1,4 @@
-#!/usr/bin/env python3
-import os
-import sys
-import subprocess
-import time
-import json
-import urllib.request
-import urllib.error
-import yaml
+import os, sys, subprocess, time, json, urllib.request, yaml
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")
@@ -15,24 +7,6 @@ CONFIG_DIR = os.path.join(ROOT, "config")
 PEER1 = os.path.join(CONFIG_DIR, "peer_01.yaml")
 PEER2 = os.path.join(CONFIG_DIR, "peer_02.yaml")
 PEER3 = os.path.join(CONFIG_DIR, "peer_03.yaml")
-
-def find_latest_peer_config():
-    files = []
-    for base in os.listdir(CONFIG_DIR):
-        if base.startswith("peer_") and base.endswith(".yaml"):
-            p = os.path.join(CONFIG_DIR, base)
-            try:
-                n = int(base[5:7])
-            except ValueError:
-                try:
-                    n = int(base[5:-5])
-                except Exception:
-                    continue
-            files.append((n, p))
-    if not files:
-        return None
-    files.sort(key=lambda x: x[0])
-    return files[-1][1]
 
 def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -62,7 +36,6 @@ def http_post(url, data=None, timeout=10):
 def http_get(url, timeout=10):
     with urllib.request.urlopen(url, timeout=timeout) as r:
         return r.status, r.read().decode("utf-8")
-
 
 def main():
     cfg1 = load_yaml(PEER1)
@@ -126,17 +99,22 @@ def main():
             print("Error creando peer:", cp.stderr)
         else:
             print(cp.stdout.strip())
-        created_path = find_latest_peer_config() or PEER3
-        cfg3 = load_yaml(created_path)
+        
+        # Verificar que el path de 3 exista
+        if not os.path.exists(PEER3):
+            print("No se encontró el nuevo peer config.")
+            sys.exit(1)
+        
+        cfg3 = load_yaml(PEER3)
         port3 = int(cfg3.get("rest_port", 50003))
-        p3 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", created_path])
+        p3 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", PEER3])
         ok3 = wait_ready(port3)
         if not ok3:
             print("Advertencia: el nodo 3 no respondió a tiempo.")
 
         # 4) Login del nodo3 con su titular (fallback a suplente)
         new_ip = cfg3.get("ip", "127.0.0.1")
-        # 4) Join del nodo3 con su titular (fallback a suplente)
+        # 4) Pedirle al nodo titular que lo loguee a la red.
         headline = (cfg3.get("headline_peer") or {}).get("address")
         substitute = (cfg3.get("substitute_peer") or {}).get("address")
         def do_join_local(target_addr):
@@ -169,34 +147,21 @@ def main():
         except Exception as e:
             print("No se pudo indexar nodo3:", e)
 
-        # Pequeña espera para estabilizar DL y propagaciones
         time.sleep(0.5)
-
-        # Para seguridad, breve espera tras join e indexaciones
         time.sleep(0.5)
 
         # 5) Buscar desde nodo 3 el filename elegido (flood TTL=3)
         srch_url = f"http://127.0.0.1:{port3}/directory/search"
         payload = {"filename": filename, "ttl": 3}
         print("POST", srch_url, payload)
-        # Reintentar la búsqueda algunas veces para tolerar condiciones de carrera
-        attempts = 3
-        last_st, last_txt = None, None
-        for i in range(attempts):
-            try:
-                st, txt = http_post(srch_url, payload, timeout=12)
-                last_st, last_txt = st, txt
-                print(f"→ Respuesta intento {i+1} /directory/search (desde nodo3):", st, txt)
-                break
-            except Exception as e:
-                print(f"Intento {i+1} fallo /directory/search:", e)
-                time.sleep(0.7)
-        if last_st is not None:
-            print("→ Respuesta /directory/search (desde nodo3):", last_st, last_txt)
+        try:
+            st, txt = http_post(srch_url, payload, timeout=12)
+            print("→ Respuesta /directory/search (desde nodo3):", st, txt)
+        except Exception as e:
+            print("Fallo /directory/search:", e)
 
-        print("Prueba completada. Ctrl+C para detener los nodos.")
-        while True:
-            time.sleep(1)
+        print("Prueba completada. Saliendo y cerrando nodos...")
+        return
 
     except KeyboardInterrupt:
         print("Saliendo...")
@@ -210,6 +175,22 @@ def main():
                 p.wait(timeout=5)
             except Exception:
                 p.kill()
+
+        # Dejar los configs como en un inicio solo 1 y 2
+        try:
+            for base in os.listdir(CONFIG_DIR):
+                if not (base.startswith("peer_") and base.endswith(".yaml")):
+                    continue
+                if base in ("peer_01.yaml", "peer_02.yaml"):
+                    continue
+                path = os.path.join(CONFIG_DIR, base)
+                try:
+                    os.remove(path)
+                    print(f"Eliminado config: {path}")
+                except Exception as e:
+                    print(f"No se pudo eliminar {path}: {e}")
+        except Exception as e:
+            print("Error limpiando configs:", e)
 
 if __name__ == "__main__":
     main()

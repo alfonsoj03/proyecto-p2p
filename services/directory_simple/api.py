@@ -5,13 +5,15 @@ from services.directory_simple.service import (
     login_from,
     start_search,
     handle_query,
+    get_all,
+    get_self_address,
     join_with,
 )
 
 router = APIRouter(prefix="/directory", tags=["directory_simple"])
 
 @router.post("/login")
-async def login(payload: Dict[str, str]):
+def login(payload: Dict[str, str]):
     """
     Registra (loguea) un nuevo nodo en la DL local. El payload debe contener:
     { "address": "ip:port" }
@@ -24,7 +26,7 @@ async def login(payload: Dict[str, str]):
     return {"success": True, "dl": dl}
 
 @router.post("/search")
-async def search(payload: Dict[str, object]):
+def search(payload: Dict[str, object]):
     """
     Inicia una búsqueda floodeada con TTL (default 3).
     Body: { "filename": "...", "ttl": 3 }
@@ -44,14 +46,12 @@ async def search(payload: Dict[str, object]):
     return {"success": True, **result}
 
 @router.post("/query")
-async def relay_query(payload: Dict[str, object]):
+def relay_query(payload: Dict[str, object]):
     """
     Maneja una consulta de búsqueda recibida desde otro nodo.
     Body: { "query_id": str, "filename": str, "ttl": int, "origin": "ip:port" }
     Retorna: { found: bool, owner_id?: str, address?: str }
     """
-    if not isinstance(payload, dict):
-        return {"success": False, "error": "payload inválido"}
     qid = str(payload.get("query_id", "") or "")
     filename = str(payload.get("filename", "") or "")
     try:
@@ -64,8 +64,21 @@ async def relay_query(payload: Dict[str, object]):
     result = handle_query(qid, filename, ttl, origin if isinstance(origin, str) else None)
     return {"success": True, **result}
 
+@router.get("/dl")
+def get_dl():
+    """
+    Devuelve la DL local actual de este nodo y su propia dirección.
+    Respuesta: { success: true, self: "ip:port"|null, dl: ["ip:port", ...] }
+    """
+    try:
+        dl = get_all()
+        self_addr = get_self_address()
+        return {"success": True, "self": self_addr, "dl": dl}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @router.post("/join")
-async def join(payload: Dict[str, str]):
+def join(payload: Dict[str, str]):
     """
     Hace que ESTE nodo se una a la red a través de un "target" (ip:port):
     1) Realiza un login remoto contra target (enviando nuestra dirección propia ya configurada)

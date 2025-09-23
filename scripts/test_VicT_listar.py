@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-import os, sys, subprocess, time, json, urllib.request, urllib.error, yaml
+import os, sys, subprocess, time, json, urllib.request, yaml
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")

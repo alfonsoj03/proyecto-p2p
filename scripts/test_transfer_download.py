@@ -1,12 +1,4 @@
-#!/usr/bin/env python3
-import os
-import sys
-import subprocess
-import time
-import json
-import urllib.request
-import urllib.error
-import yaml
+import os, sys, subprocess, time, json, urllib.request, yaml
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")
@@ -15,25 +7,6 @@ CONFIG_DIR = os.path.join(ROOT, "config")
 PEER1 = os.path.join(CONFIG_DIR, "peer_01.yaml")
 PEER2 = os.path.join(CONFIG_DIR, "peer_02.yaml")
 PEER3 = os.path.join(CONFIG_DIR, "peer_03.yaml")
-
-def find_latest_peer_config():
-    files = []
-    for base in os.listdir(CONFIG_DIR):
-        if base.startswith("peer_") and base.endswith(".yaml"):
-            p = os.path.join(CONFIG_DIR, base)
-            try:
-                n = int(base[5:7])
-            except ValueError:
-                try:
-                    n = int(base[5:-5])
-                except Exception:
-                    continue
-            files.append((n, p))
-    if not files:
-        return None
-    files.sort(key=lambda x: x[0])
-    return files[-1][1]
-
 
 def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -123,10 +96,15 @@ def main():
             print("Error creando peer:", cp.stderr)
         else:
             print(cp.stdout.strip())
-        created_path = find_latest_peer_config() or PEER3
-        cfg3 = load_yaml(created_path)
+            
+        # Verificar que el path de 3 exista
+        if not os.path.exists(PEER3):
+            print("No se encontró el nuevo peer config.")
+            sys.exit(1)
+        
+        cfg3 = load_yaml(PEER3)
         port3 = int(cfg3.get("rest_port", 50003))
-        p3 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", created_path])
+        p3 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", PEER3])
         ok3 = wait_ready(port3)
         if not ok3:
             print("Advertencia: nodo3 no respondió a tiempo.")
@@ -192,6 +170,22 @@ def main():
                 p.wait(timeout=5)
             except Exception:
                 p.kill()
+
+        # Limpiar configs: borrar todos los peer_*.yaml excepto peer_01.yaml y peer_02.yaml
+        try:
+            for base in os.listdir(CONFIG_DIR):
+                if not (base.startswith("peer_") and base.endswith(".yaml")):
+                    continue
+                if base in ("peer_01.yaml", "peer_02.yaml"):
+                    continue
+                path = os.path.join(CONFIG_DIR, base)
+                try:
+                    os.remove(path)
+                    print(f"Eliminado config: {path}")
+                except Exception as e:
+                    print(f"No se pudo eliminar {path}: {e}")
+        except Exception as e:
+            print("Error limpiando configs:", e)
 
 if __name__ == "__main__":
     main()

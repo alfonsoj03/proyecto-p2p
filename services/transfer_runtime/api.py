@@ -15,7 +15,7 @@ def _post_json(url: str, payload: Dict, timeout: int = 8):
         return r.status, r.read().decode("utf-8")
 
 @router.post("/download")
-async def transfer_download(payload: Dict[str, object]):
+def transfer_download(payload: Dict[str, object]):
     """
     - Toma filename (y TTL opcional, default=3)
     - Pide a algún vecino de la DL que ejecute /directory/search
