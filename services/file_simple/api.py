@@ -22,12 +22,12 @@ app.include_router(directory_router)
 app.include_router(transfer_router)
 
 @app.post("/indexar")
-async def api_indexar():
+def api_indexar():
     """Indexa el directorio configurado para este nodo y guarda en memoria."""
     total = indexar()
     return {"success": True, "total": total}
 
 @app.get("/archivos")
-async def api_archivos():
+def api_archivos():
     """Lista archivos indexados en memoria para este nodo."""
     return {"success": True, "data": listar_archivos()}

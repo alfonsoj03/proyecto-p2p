@@ -1,38 +1,12 @@
-#!/usr/bin/env python3
-import os, sys, subprocess, time, json, urllib.request, urllib.error, yaml
+import os, sys, subprocess, time, json, urllib.request, yaml
+from utils.test_utils import load_yaml, wait_ready
+from utils.http_client import post_json as http_post, get as http_get
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")
 
 PEER1 = os.path.join(ROOT, "config", "peer_01.yaml")
 PEER2 = os.path.join(ROOT, "config", "peer_02.yaml")
-
-def load_yaml(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
-
-def wait_ready(port, timeout=15):
-    url = f"http://127.0.0.1:{port}/archivos"
-    t0 = time.time()
-    while time.time() - t0 < timeout:
-        try:
-            with urllib.request.urlopen(url, timeout=2) as r:
-                if r.status == 200:
-                    return True
-        except Exception:
-            pass
-        time.sleep(0.4)
-    return False
-
-def http_post(url, data=None):
-    body = json.dumps(data or {}).encode("utf-8")
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return r.status, r.read().decode("utf-8")
-
-def http_get(url):
-    with urllib.request.urlopen(url, timeout=10) as r:
-        return r.status, r.read().decode("utf-8")
 
 def main():
     cfg1 = load_yaml(PEER1)
