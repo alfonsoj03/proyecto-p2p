@@ -1,6 +1,9 @@
 import os, sys, subprocess, time, json, urllib.request, urllib.error, yaml
+<<<<<<< HEAD
 from utils.http_client import post_json as http_post, get as http_get
 from utils.test_utils import load_yaml, wait_ready
+=======
+>>>>>>> 962dda4256852d765141b22a47e3c0034c051334
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")
@@ -10,9 +13,38 @@ PEER1 = os.path.join(CONFIG_DIR, "peer_01.yaml")
 PEER2 = os.path.join(CONFIG_DIR, "peer_02.yaml")
 PEER3 = os.path.join(CONFIG_DIR, "peer_03.yaml")
 
+<<<<<<< HEAD
 # IMPORTANTE: Función helper que inicia el nodo en un proceso separado.
 def start_node(config_path: str):
     return subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", config_path])
+=======
+def http_post(url, data=None, timeout=10):
+    body = json.dumps(data or {}).encode("utf-8")
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.status, r.read().decode("utf-8")
+
+def http_get(url, timeout=10):
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        return r.status, r.read().decode("utf-8")
+
+def load_yaml(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+def wait_ready(port, timeout=20):
+    url = f"http://127.0.0.1:{port}/archivos"
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        try:
+            with urllib.request.urlopen(url, timeout=2) as r:
+                if r.status == 200:
+                    return True
+        except Exception:
+            pass
+        time.sleep(0.3)
+    return False
+>>>>>>> 962dda4256852d765141b22a47e3c0034c051334
 
 def main():
     cfg1 = load_yaml(PEER1)
@@ -21,8 +53,13 @@ def main():
     port2 = int(cfg2.get("rest_port"))
 
     print("Iniciando Nodo 1 y Nodo 2...")
+<<<<<<< HEAD
     p1 = start_node(PEER1)
     p2 = start_node(PEER2)
+=======
+    p1 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", PEER1])
+    p2 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", PEER2])
+>>>>>>> 962dda4256852d765141b22a47e3c0034c051334
 
     p3 = None
     try:
@@ -54,7 +91,11 @@ def main():
         cfg3 = load_yaml(PEER3)
         port3 = int(cfg3.get("rest_port", 50003))
         print(f"Iniciando Nodo 3 en 127.0.0.1:{port3}...")
+<<<<<<< HEAD
         p3 = start_node(PEER3)
+=======
+        p3 = subprocess.Popen([sys.executable, SIMPLE_MAIN, "--config", PEER3])
+>>>>>>> 962dda4256852d765141b22a47e3c0034c051334
         wait_ready(port3)
 
         # Node3 join con titular o suplente
@@ -101,6 +142,7 @@ def main():
                 except Exception:
                     pass
 
+<<<<<<< HEAD
         # Limpiar configs: borrar todos los peer_*.yaml excepto peer_01.yaml y peer_02.yaml
         try:
             for base in os.listdir(CONFIG_DIR):
@@ -117,5 +159,7 @@ def main():
         except Exception as e:
             print("Error limpiando configs:", e)
 
+=======
+>>>>>>> 962dda4256852d765141b22a47e3c0034c051334
 if __name__ == "__main__":
     main()
