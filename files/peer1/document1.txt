@@ -1,0 +1,22 @@
+Documento de ejemplo para Peer 1
+===============================
+
+Este es un archivo de texto de ejemplo que se utiliza para probar
+el sistema P2P de compartición de archivos.
+
+Contenido:
+- Texto de muestra
+- Caracteres especiales: áéíóú ñ ¿¡
+- Números: 1234567890
+- Símbolos: !@#$%^&*()
+
+El sistema P2P permite:
+1. Indexación automática de archivos
+2. Búsqueda distribuida en la red
+3. Transferencias ECO/DUMMY
+4. Descubrimiento de peers
+5. API REST y gRPC
+
+Fecha de creación: 2024-01-01
+Tamaño: Pequeño
+Tipo: Documento de texto

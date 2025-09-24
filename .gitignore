@@ -57,10 +57,6 @@ logs/
 proto/*_pb2.py
 proto/*_pb2_grpc.py
 
-# Files directory content (except examples)
-files/*/
-!files/peer*/examples/
-
 # Config files with sensitive data
 config/*_production.yaml
 

@@ -1,0 +1,21 @@
+# Archivo simulado de imagen para Peer 2
+# Este archivo simula una imagen para pruebas del sistema P2P
+
+METADATA:
+- Filename: image1.jpg (simulado como .txt)
+- Type: Image
+- Size: Medium
+- Format: JPEG
+- Resolution: 1920x1080
+- Owner: Peer 2
+
+CONTENT SIMULATION:
+[BINARY_DATA_PLACEHOLDER]
+Este contenido simula datos binarios de una imagen JPEG.
+En un sistema real, aquí estarían los bytes de la imagen.
+
+TAGS: imagen, foto, jpeg, multimedia, peer2
+
+DESCRIPTION:
+Imagen de ejemplo para demostrar las capacidades de indexación
+y búsqueda del sistema P2P. El archivo real sería binario.

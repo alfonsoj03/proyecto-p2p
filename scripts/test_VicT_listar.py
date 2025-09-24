@@ -1,9 +1,6 @@
 import os, sys, subprocess, time, json, urllib.request, yaml
-<<<<<<< HEAD
 from utils.test_utils import load_yaml, wait_ready
 from utils.http_client import post_json as http_post, get as http_get
-=======
->>>>>>> 962dda4256852d765141b22a47e3c0034c051334
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SIMPLE_MAIN = os.path.join(ROOT, "simple_main.py")
